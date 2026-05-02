@@ -151,7 +151,7 @@
                 <button class="launch-btn preset-btn" data-options="True, False">True / False</button>
                 <button class="launch-btn preset-btn" data-options="Yes, No, Unsure">Yes / No / Unsure</button>
                 <button class="launch-btn preset-btn" data-options="True, False, Unsure">True / False / Unsure</button>
-                <button class="launch-btn preset-btn" data-options="A, B, C, D">A, B, C, D</button>
+                <button class="launch-btn preset-btn" data-options="A, B, C, D">A / B / C / D</button>
                 <button class="launch-btn" id="customLaunchBtn" style="background: #1a365d;">Custom...</button>
             </div>
         </div>
@@ -488,9 +488,8 @@
                     // Create a button for this custom set of options for easy re-launching
                     const newBtn = document.createElement('button');
                     newBtn.className = 'launch-btn';
-                    const buttonText = options.join(', ');
-                    newBtn.textContent = buttonText;
-                    newBtn.setAttribute('data-options', buttonText);
+                    newBtn.textContent = options.join(' / ');
+                    newBtn.setAttribute('data-options', options.join(', '));
                     newBtn.addEventListener('click', () => {
                         launchQuestion(options);
                     });
