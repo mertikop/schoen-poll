@@ -493,7 +493,7 @@
             if (userInput !== null) {
                 const options = [...new Set(userInput.split(',').map(o => o.trim()).filter(o => o.length > 0))];
                 if (options.length > 0) {
-                    // Create the new button for esy re-use
+                    // Create the new button for easy re-use
                     addLaunchButton(options, false);
                     // Launch the customized question immediately
                     launchQuestion(options);
@@ -502,7 +502,7 @@
         });
 
         // Mode 2: Control Buttons
-        
+
         revealBtn.addEventListener('click', async () => {
             if (!currentLiveState.active_question_id) return;
             
