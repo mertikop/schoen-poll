@@ -480,10 +480,26 @@
         });
 
         document.getElementById('customLaunchBtn').addEventListener('click', () => {
-            const userInput = prompt("Enter custom options, separated by commas:\n(e.g., Apple, Banana, Cherry)", "");
-            if (userInput !== null && userInput.trim() !== "") {
-                const options = userInput.split(',').map(o => o.trim()).filter(o => o.length > 0);
-                launchQuestion(options);
+            const userInput = prompt("Enter custom options, separated by commas:\n(e.g.: Apple, Banana, Cherry)", "");
+            if (userInput !== null) {
+                const options = [...new Set(userInput.split(',').map(o => o.trim()).filter(o => o.length > 0))];
+                if (options.length > 0) {
+
+                    // Create a button for this custom set of options for easy re-launching
+                    const newBtn = document.createElement('button');
+                    newBtn.className = 'launch-btn';
+                    const buttonText = options.join(', ');
+                    newBtn.textContent = buttonText;
+                    newBtn.setAttribute('data-options', buttonText);
+                    newBtn.addEventListener('click', () => {
+                        launchQuestion(options);
+                    });
+                    const customBtn = document.getElementById('customLaunchBtn');
+                    customBtn.parentNode.appendChild(newBtn);
+
+                    // Launch the customized question now
+                    launchQuestion(options);
+                }
             }
         });
 
