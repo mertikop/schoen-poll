@@ -224,13 +224,13 @@
                     document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
                     clickedButton.classList.add('selected');
                     await setDoc(answerRef, { choice: selectedOption, timestamp: serverTimestamp() });
-                    showStatus("", "success");
                 }
+                showStatus("", "success");
 
                 // Any successful action (checking or unchecking) now costs a click
                 clicksRemaining--;
                 localStorage.setItem('active_poll_clicks', clicksRemaining);
-                
+
                 updateStatusUI();
 
             } catch (error) {
@@ -244,8 +244,6 @@
                 if (clicksRemaining <= 3) {
                     const timesText = clicksRemaining === 1 ? "time" : "times";
                     showStatus(`You can change your answer ${clicksRemaining} more ${timesText}.`, "info");
-                } else {
-                    showStatus(""); // Passing empty string hides the box
                 }
             } else {
                 showStatus("Final answer locked in.", "info");
