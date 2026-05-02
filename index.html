@@ -239,17 +239,20 @@
         }
 
         function updateStatusUI() {
-            if (clicksRemaining > 0) {
-                if (clicksRemaining === maxClicksPerQuestion) {
-                    showStatus("Select your answer", "info");
-                } else
-                if (clicksRemaining <= 3) {
-                    const timesText = (clicksRemaining === 1) ? "time" : "times";
-                    showStatus(`You can change your answer ${clicksRemaining} more ${timesText}.`, "info");
-                }
-            } else {
-                showStatus("Final answer locked in.", "info");
+            if (clicksRemaining === maxClicksPerQuestion) {
+                showStatus("Select your answer.", "info");
+                return;
             }
+            if (clicksRemaining === 0) {
+                showStatus("Final answer locked in.", "info");
+                return;
+            }
+            if (clicksRemaining <= 3) {
+                const timesText = (clicksRemaining === 1) ? "time" : "times";
+                showStatus(`You may change your answer ${clicksRemaining} more ${timesText}.`, "info");
+                return;
+            }
+            showStatus("");
         }
 
         // 5. Check if the user already answered this question
