@@ -147,11 +147,6 @@
         <div id="launchpadSection">
             <h3 style="margin-bottom: 20px; color: #666;">Select a question type</h3>
             <div class="launch-grid">
-                <button class="launch-btn preset-btn" data-options="Yes, No">Yes / No</button>
-                <button class="launch-btn preset-btn" data-options="True, False">True / False</button>
-                <button class="launch-btn preset-btn" data-options="Yes, No, Unsure">Yes / No / Unsure</button>
-                <button class="launch-btn preset-btn" data-options="True, False, Unsure">True / False / Unsure</button>
-                <button class="launch-btn preset-btn" data-options="A, B, C, D">A / B / C / D</button>
                 <button class="launch-btn" id="customLaunchBtn" style="background: #1a365d;">Custom...</button>
             </div>
         </div>
@@ -194,7 +189,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, setDoc, collection, addDoc, serverTimestamp, onSnapshot, getDocs, deleteField } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         
-        import { firebaseConfig, colors } from "./config.js";
+        import { firebaseConfig, colors, presetButtons } from "./config.js";
         import { initAdminAuth } from "./adminauth.js";
 
         const app = initializeApp(firebaseConfig);
@@ -204,6 +199,7 @@
         const launchpadSection = document.getElementById('launchpadSection');
         const controlDeckSection = document.getElementById('controlDeckSection');
         
+        const customBtn = document.getElementById('customLaunchBtn');
         const revealBtn = document.getElementById('revealBtn');
         const toggleOpenCloseBtn = document.getElementById('toggleOpenCloseBtn');
         const finishBtn = document.getElementById('finishBtn');
@@ -472,37 +468,41 @@
         }
 
         // Mode 1: Launch Buttons
-        document.querySelectorAll('.preset-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const options = e.target.getAttribute('data-options').split(',').map(o => o.trim());
-                launchQuestion(options);
-            });
-        });
 
+        // Helper function to create a button with answer options
+        function addLaunchButton(optionsArray, beforeCustom) {
+            const btn = document.createElement('button');
+            btn.className = 'launch-btn';
+            btn.textContent = optionsArray.join(' / ');
+            btn.addEventListener('click', () => {
+                launchQuestion(optionsArray);
+            });            
+            if (beforeCustom) {
+                customBtn.parentNode.insertBefore(btn, customBtn);
+            } else {
+                customBtn.parentNode.appendChild(btn);
+            }
+        }
+        
+        presetButtons.forEach(optionsArray => {
+            addLaunchButton(optionsArray, true);
+        });
+        
         document.getElementById('customLaunchBtn').addEventListener('click', () => {
             const userInput = prompt("Enter custom options, separated by commas:\n(e.g.: Apple, Banana, Cherry)", "");
             if (userInput !== null) {
                 const options = [...new Set(userInput.split(',').map(o => o.trim()).filter(o => o.length > 0))];
                 if (options.length > 0) {
-
-                    // Create a button for this custom set of options for easy re-launching
-                    const newBtn = document.createElement('button');
-                    newBtn.className = 'launch-btn';
-                    newBtn.textContent = options.join(' / ');
-                    newBtn.setAttribute('data-options', options.join(', '));
-                    newBtn.addEventListener('click', () => {
-                        launchQuestion(options);
-                    });
-                    const customBtn = document.getElementById('customLaunchBtn');
-                    customBtn.parentNode.appendChild(newBtn);
-
-                    // Launch the customized question now
+                    // Create the new button for esy re-use
+                    addLaunchButton(options, false);
+                    // Launch the customized question immediately
                     launchQuestion(options);
                 }
             }
         });
 
         // Mode 2: Control Buttons
+        
         revealBtn.addEventListener('click', async () => {
             if (!currentLiveState.active_question_id) return;
             

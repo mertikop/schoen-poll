@@ -11,5 +11,14 @@ export const firebaseConfig = {
 // Specify the URL to the clicker here, for the QR code.
 export const clickerUrl = "https://nicolasboumal.github.io/schoen-poll/";
 
-// Custom color palette for results (bubbles)
+// Custom color palette for displaying the results (bubbles)
 export const colors = ["#4C72B0", "#55A868", "#8172B2", "#64B5CD", "#CCB974", "#C44E52"];
+
+// Define buttons with preset options
+export const presetButtons = [
+    ['Yes', 'No'],
+    ['True', 'False'],
+    ['Yes', 'No', 'Unsure'],
+    ['True', 'False', 'Unsure'],
+    ['A', 'B', 'C', 'D']
+];
