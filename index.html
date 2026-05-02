@@ -69,7 +69,8 @@
         let activeQuestionId = null;
         let currentSelection = null;
 
-        let clicksRemaining = 6; // Feeling facetious?
+        const maxClicksPerQuestion = 6; // Feeling facetious?
+        let clicksRemaining = maxClicksPerQuestion;
 
         function showStatus(message, type = 'info', autoHide = false) {
             if (!statusMessage) return;
@@ -158,7 +159,7 @@
                     clicksRemaining = parseInt(localStorage.getItem('active_poll_clicks')) || 0;
                 } else {
                     // Brand new question or first time seeing this ID
-                    clicksRemaining = 6;
+                    clicksRemaining = maxClicksPerQuestion;
                     localStorage.setItem('active_poll_id', activeQuestionId);
                     localStorage.setItem('active_poll_clicks', clicksRemaining);
                 }
@@ -174,7 +175,6 @@
 
             // Otherwise, handle open/closed
             if (data.status === "open") {
-                showStatus("Select your answer.", "info");
                 updateStatusUI(); 
             } else if (data.status === "closed") {
                 showStatus("This question is closed.", "info");
@@ -225,7 +225,6 @@
                     clickedButton.classList.add('selected');
                     await setDoc(answerRef, { choice: selectedOption, timestamp: serverTimestamp() });
                 }
-                showStatus("", "success");
 
                 // Any successful action (checking or unchecking) now costs a click
                 clicksRemaining--;
@@ -241,8 +240,11 @@
 
         function updateStatusUI() {
             if (clicksRemaining > 0) {
+                if (clicksRemaining === maxClicksPerQuestion) {
+                    showStatus("Select your answer", "info");
+                } else
                 if (clicksRemaining <= 3) {
-                    const timesText = clicksRemaining === 1 ? "time" : "times";
+                    const timesText = (clicksRemaining === 1) ? "time" : "times";
                     showStatus(`You can change your answer ${clicksRemaining} more ${timesText}.`, "info");
                 }
             } else {
