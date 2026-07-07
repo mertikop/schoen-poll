@@ -6,10 +6,10 @@ Schoen Poll is a static, Firebase-backed live polling system for lectures or pre
 
 - `index.html`: Participant clicker. Users sign in anonymously, listen to `state/live`, and submit or remove one answer per question.
 - `clicker.html`: Alias that redirects to `index.html`.
-- `admin.html`: Admin remote. Google-authenticated admins launch questions, close or reopen voting, reveal or hide results, show the QR code, simulate votes, and adjust result bubble size. It listens to `state/live`, `state/display`, and `questions/{questionId}/answers`.
+- `admin.html`: Admin remote. Google-authenticated admins launch questions, close or reopen voting, reveal or hide results, show the QR code, add private history labels, simulate votes, and adjust result bubble size. It listens to `state/live`, `state/display`, `questions/{questionId}`, and `questions/{questionId}/answers`.
 - `remote.html`: Alias that redirects to `admin.html`.
 - `results.html`: Projector/overlay page. It loads D3, `schoen-poll.js`, and `schoen-poll.css` to render live results. It listens to `state/live`, `state/display`, and `questions/{questionId}/answers`.
-- `history.html`: Admin-only history page. It reads past questions, computes or reuses cached tallies, renders stacked result bars, and can delete all questions from a given day. It reads `state/live`, `questions`, and each relevant `questions/{questionId}/answers` subcollection, but does not use live listeners.
+- `history.html`: Admin-only history page. It reads past questions, computes or reuses cached tallies, renders stacked result bars, lets admins edit private question labels, and can delete all questions from a given day. It reads `state/live`, `questions`, and each relevant `questions/{questionId}/answers` subcollection, but does not use live listeners.
 
 ## Shared Files
 
@@ -32,6 +32,7 @@ Schoen Poll is a static, Firebase-backed live polling system for lectures or pre
   - `bubbleSize`: optional multiplier for result bubbles.
 - `questions/{questionId}`
   - `timestamp`: creation timestamp.
+  - `label`: optional private admin-facing label for history and recall.
   - `options`: answer labels for that question.
   - `finalTallies`: cached result object, when available.
   - `totalVotes`: cached total vote count, when available.

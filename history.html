@@ -50,6 +50,36 @@
 
         /* Question Cards */
         .question-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .question-label { margin-bottom: 8px; }
+        .question-label-btn {
+            background: none;
+            border: none;
+            padding: 0;
+            text-align: left;
+            cursor: text;
+            color: #1a365d;
+            font: 700 1.1rem system-ui, -apple-system, sans-serif;
+        }
+        .question-label-btn.empty {
+            color: #718096;
+            font-size: 0.95rem;
+            font-style: italic;
+            font-weight: 600;
+        }
+        .question-label-input {
+            box-sizing: border-box;
+            width: 100%;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 9px 10px;
+            font: 1rem system-ui, -apple-system, sans-serif;
+            color: #334155;
+        }
+        .question-label-input:focus {
+            outline: none;
+            border-color: #4285F4;
+            box-shadow: 0 0 0 3px rgba(66,133,244,0.15);
+        }
         .question-time { font-size: 0.9rem; color: #888; margin-bottom: 10px; font-weight: bold; }
         
         /* Stacked Bar Chart */
@@ -137,7 +167,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, getDoc, query, orderBy, deleteDoc, doc, writeBatch, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, getDoc, query, orderBy, deleteDoc, doc, writeBatch, setDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         
         import { firebaseConfig, colors } from "./config.js";
         import { initAdminAuth } from "./adminauth.js";
@@ -240,6 +270,7 @@
                         timestampMs,
                         dateStr,
                         timeStr,
+                        label: typeof data.label === "string" ? data.label : "",
                         options: data.options,
                         tallies,
                         totalVotes
@@ -301,6 +332,8 @@
                         const card = document.createElement('div');
                         card.className = 'question-card';
 
+                        card.appendChild(createLabelEditor(q));
+
                         const timeHeader = document.createElement('div');
                         timeHeader.className = 'question-time';
                         timeHeader.innerText = `${q.timeStr} — ${q.totalVotes} total votes`;
@@ -358,6 +391,70 @@
                 console.error("Error fetching history: ", error);
                 historyContainer.innerHTML = '<div class="no-data">Error loading history. Check console.</div>';
             }
+        }
+
+        function createLabelEditor(q) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'question-label';
+            let currentLabel = q.label || "";
+
+            function renderDisplay() {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = currentLabel ? 'question-label-btn' : 'question-label-btn empty';
+                btn.innerText = currentLabel || "Add label";
+                btn.onclick = renderInput;
+                wrapper.replaceChildren(btn);
+            }
+
+            function renderInput() {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'question-label-input';
+                input.maxLength = 140;
+                input.placeholder = "Optional label for history";
+                input.value = currentLabel;
+
+                let finished = false;
+                const save = async () => {
+                    if (finished) return;
+                    finished = true;
+
+                    const nextLabel = input.value.trim();
+                    if (nextLabel !== currentLabel) {
+                        try {
+                            await setDoc(doc(db, "questions", q.id), {
+                                label: nextLabel || deleteField()
+                            }, { merge: true });
+                            currentLabel = nextLabel;
+                            q.label = nextLabel;
+                        } catch (error) {
+                            console.error("Error saving label:", error);
+                        }
+                    }
+
+                    renderDisplay();
+                };
+
+                input.addEventListener('blur', save);
+                input.addEventListener('keydown', async (e) => {
+                    if (e.key === "Enter") {
+                        e.preventDefault();
+                        await save();
+                    }
+                    if (e.key === "Escape") {
+                        finished = true;
+                        renderDisplay();
+                    }
+                });
+
+                wrapper.replaceChildren(input);
+                input.focus();
+                input.select();
+            }
+
+            renderDisplay();
+            return wrapper;
         }
 
         // Batched delete function

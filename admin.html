@@ -86,6 +86,26 @@
             margin-bottom: 15px;
         }
 
+        .question-label-editor {
+            margin-bottom: 15px;
+        }
+        #questionLabelInput {
+            box-sizing: border-box;
+            width: 100%;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 11px 12px;
+            font: 0.95rem system-ui, -apple-system, sans-serif;
+            color: #334155;
+            background: #fff;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);
+        }
+        #questionLabelInput:focus {
+            outline: none;
+            border-color: #4285F4;
+            box-shadow: 0 0 0 3px rgba(66,133,244,0.15);
+        }
+
         .controls-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
         
         /* The Close / Re-open Button */
@@ -171,6 +191,10 @@
                 <canvas id="talliesChart"></canvas>
             </div>
 
+            <div class="question-label-editor">
+                <input type="text" id="questionLabelInput" maxlength="140" placeholder="Optional label (for history)">
+            </div>
+
             <div class="controls-grid">
                 <button id="toggleOpenCloseBtn">Stop taking answers</button>
                 <button id="revealBtn">Reveal answers</button>
@@ -233,6 +257,7 @@
         const statusText = document.getElementById('statusText');
         const bubbleSizeSlider = document.getElementById('bubbleSizeSlider');
         const bubbleSizeLabel = document.getElementById('bubbleSizeLabel');
+        const questionLabelInput = document.getElementById('questionLabelInput');
 
         // State Variables
         let currentLiveState = {};
@@ -240,6 +265,9 @@
         let unsubscribeAnswers = null;
         let unsubscribeLiveState = null;
         let unsubscribeDisplayState = null; 
+        let unsubscribeQuestionLabel = null;
+        let currentLabelQuestionId = null;
+        let lastSavedLabel = "";
         
         let seenUserIds = new Set();
         let currentVoteCount = 0;
@@ -419,6 +447,7 @@
                     liveChart.destroy();
                     liveChart = null;
                 }
+                stopQuestionLabelListener();
             } else {
                 // MODE 2: Control Deck
                 launchpadSection.classList.add('hidden');
@@ -436,6 +465,7 @@
 
                 if (currentLiveState.active_question_id) {
                     listenToAdminVotes(currentLiveState.active_question_id);
+                    listenToQuestionLabel(currentLiveState.active_question_id);
                 }
             }
         }
@@ -444,6 +474,7 @@
             if (unsubscribeLiveState) unsubscribeLiveState();
             if (unsubscribeDisplayState) unsubscribeDisplayState();
             if (unsubscribeAnswers) unsubscribeAnswers();
+            stopQuestionLabelListener();
         }
 
         function listenToAdminVotes(questionId) {
@@ -461,6 +492,45 @@
                 updateCountsUI();
                 updateChart();
             });
+        }
+
+        function stopQuestionLabelListener() {
+            if (unsubscribeQuestionLabel) unsubscribeQuestionLabel();
+            unsubscribeQuestionLabel = null;
+            currentLabelQuestionId = null;
+            lastSavedLabel = "";
+            questionLabelInput.value = "";
+        }
+
+        function listenToQuestionLabel(questionId) {
+            if (currentLabelQuestionId === questionId) return;
+            stopQuestionLabelListener();
+            currentLabelQuestionId = questionId;
+
+            unsubscribeQuestionLabel = onSnapshot(doc(db, "questions", questionId), (docSnap) => {
+                const nextLabel = docSnap.exists() && typeof docSnap.data().label === "string" ? docSnap.data().label : "";
+                lastSavedLabel = nextLabel;
+                if (document.activeElement !== questionLabelInput) {
+                    questionLabelInput.value = nextLabel;
+                }
+            });
+        }
+
+        async function saveQuestionLabel() {
+            if (!currentLabelQuestionId) return;
+
+            const nextLabel = questionLabelInput.value.trim();
+            if (nextLabel === lastSavedLabel) return;
+
+            try {
+                await setDoc(doc(db, "questions", currentLabelQuestionId), {
+                    label: nextLabel || deleteField()
+                }, { merge: true });
+                lastSavedLabel = nextLabel;
+            } catch (error) {
+                console.error("Error saving label:", error);
+                statusText.innerText = "Label save failed.";
+            }
         }
 
         // --- CORE ACTIONS ---
@@ -590,6 +660,15 @@
             await setDoc(doc(db, "state", "live"), { 
                 colorClickers: e.target.checked 
             }, { merge: true });
+        });
+
+        questionLabelInput.addEventListener('blur', saveQuestionLabel);
+        questionLabelInput.addEventListener('keydown', async (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                await saveQuestionLabel();
+                questionLabelInput.blur();
+            }
         });
 
         // --- ADVANCED TOOLS ---
