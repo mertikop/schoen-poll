@@ -113,6 +113,7 @@
         summary { font-weight: bold; color: #666; cursor: pointer; outline: none; }
         .admin-tools { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
         .tool-btn { padding: 12px; font-size: 0.9rem; background: #e0e0e0; color: #333; box-shadow: none; }
+        .warning-btn { background: #ffecb3; color: #8a5a00; }
         .danger-btn { background: #ffcdd2; color: #c62828; }
         .tool-toggle {
             background: #e0e0e0;
@@ -199,7 +200,7 @@
                     </label>
                     <input type="range" id="bubbleSizeSlider" min="0.3" max="3.0" step="0.1" value="1.0" style="width: 100%;">
                 </div>
-                <button class="tool-btn" id="simulateBtn">Simulate 100 votes</button>
+                <button class="tool-btn warning-btn" id="simulateBtn">Simulate 100 votes</button>
                 <button class="tool-btn" id="logoutBtn" style="background: #555; color: white;">Log out</button>
             </div>
         </details>
