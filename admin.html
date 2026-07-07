@@ -89,7 +89,23 @@
         .question-label-editor {
             margin-bottom: 15px;
         }
-        #questionLabelInput {
+        #questionLabelDisplay {
+            background: none;
+            border: none;
+            padding: 0;
+            width: 100%;
+            text-align: left;
+            cursor: text;
+            color: #1a365d;
+            font: 700 1rem system-ui, -apple-system, sans-serif;
+        }
+        #questionLabelDisplay.empty {
+            color: #718096;
+            font-size: 0.95rem;
+            font-style: italic;
+            font-weight: 600;
+        }
+        .question-label-input {
             box-sizing: border-box;
             width: 100%;
             border: 1px solid #cbd5e1;
@@ -100,7 +116,7 @@
             background: #fff;
             box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);
         }
-        #questionLabelInput:focus {
+        .question-label-input:focus {
             outline: none;
             border-color: #4285F4;
             box-shadow: 0 0 0 3px rgba(66,133,244,0.15);
@@ -192,7 +208,7 @@
             </div>
 
             <div class="question-label-editor">
-                <input type="text" id="questionLabelInput" maxlength="140" placeholder="Optional label (for history)">
+                <button type="button" id="questionLabelDisplay" class="empty">Add label for history</button>
             </div>
 
             <div class="controls-grid">
@@ -257,7 +273,8 @@
         const statusText = document.getElementById('statusText');
         const bubbleSizeSlider = document.getElementById('bubbleSizeSlider');
         const bubbleSizeLabel = document.getElementById('bubbleSizeLabel');
-        const questionLabelInput = document.getElementById('questionLabelInput');
+        const questionLabelEditor = document.querySelector('.question-label-editor');
+        const questionLabelDisplay = document.getElementById('questionLabelDisplay');
 
         // State Variables
         let currentLiveState = {};
@@ -268,6 +285,7 @@
         let unsubscribeQuestionLabel = null;
         let currentLabelQuestionId = null;
         let lastSavedLabel = "";
+        let isEditingQuestionLabel = false;
         
         let seenUserIds = new Set();
         let currentVoteCount = 0;
@@ -499,7 +517,8 @@
             unsubscribeQuestionLabel = null;
             currentLabelQuestionId = null;
             lastSavedLabel = "";
-            questionLabelInput.value = "";
+            isEditingQuestionLabel = false;
+            renderQuestionLabelDisplay();
         }
 
         function listenToQuestionLabel(questionId) {
@@ -510,16 +529,66 @@
             unsubscribeQuestionLabel = onSnapshot(doc(db, "questions", questionId), (docSnap) => {
                 const nextLabel = docSnap.exists() && typeof docSnap.data().label === "string" ? docSnap.data().label : "";
                 lastSavedLabel = nextLabel;
-                if (document.activeElement !== questionLabelInput) {
-                    questionLabelInput.value = nextLabel;
+                if (!isEditingQuestionLabel) {
+                    renderQuestionLabelDisplay();
                 }
             });
         }
 
-        async function saveQuestionLabel() {
+        function renderQuestionLabelDisplay() {
+            questionLabelDisplay.className = lastSavedLabel ? "" : "empty";
+            questionLabelDisplay.innerText = lastSavedLabel || "Add label for history";
+            questionLabelEditor.replaceChildren(questionLabelDisplay);
+        }
+
+        function editQuestionLabel() {
+            if (!currentLabelQuestionId || isEditingQuestionLabel) return;
+
+            isEditingQuestionLabel = true;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'question-label-input';
+            input.maxLength = 140;
+            input.placeholder = "Optional label for history";
+            input.enterKeyHint = "done";
+            input.autocomplete = "off";
+            input.autocapitalize = "sentences";
+            input.value = lastSavedLabel;
+
+            let finished = false;
+            const finish = async (shouldSave = true) => {
+                if (finished) return;
+                finished = true;
+
+                if (shouldSave) {
+                    await saveQuestionLabel(input.value);
+                }
+
+                isEditingQuestionLabel = false;
+                renderQuestionLabelDisplay();
+            };
+
+            input.addEventListener('blur', () => finish());
+            input.addEventListener('keydown', async (e) => {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    await finish();
+                }
+                if (e.key === "Escape") {
+                    e.preventDefault();
+                    await finish(false);
+                }
+            });
+
+            questionLabelEditor.replaceChildren(input);
+            input.focus();
+            input.select();
+        }
+
+        async function saveQuestionLabel(rawLabel) {
             if (!currentLabelQuestionId) return;
 
-            const nextLabel = questionLabelInput.value.trim();
+            const nextLabel = rawLabel.trim();
             if (nextLabel === lastSavedLabel) return;
 
             try {
@@ -662,14 +731,7 @@
             }, { merge: true });
         });
 
-        questionLabelInput.addEventListener('blur', saveQuestionLabel);
-        questionLabelInput.addEventListener('keydown', async (e) => {
-            if (e.key === "Enter") {
-                e.preventDefault();
-                await saveQuestionLabel();
-                questionLabelInput.blur();
-            }
-        });
+        questionLabelDisplay.addEventListener('click', editQuestionLabel);
 
         // --- ADVANCED TOOLS ---
 
