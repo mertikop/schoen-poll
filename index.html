@@ -249,7 +249,7 @@
             }
             if (clicksRemaining <= 3) {
                 const timesText = (clicksRemaining === 1) ? "time" : "times";
-                showStatus(`You may change your answer ${clicksRemaining} more ${timesText}.`, "info");
+                showStatus(`You may change your answer at most ${clicksRemaining} more ${timesText}.`, "info");
                 return;
             }
             showStatus("");

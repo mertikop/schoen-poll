@@ -170,15 +170,15 @@
             <summary>Advanced Admin Tools</summary>
             <div class="admin-tools">
                 <span id="userEmailDisplay" style="font-size: 0.8rem; text-align: center; color: #666;"></span>
-                <button class="tool-btn" id="reactivateBtn" style="background: #ff9800; color: white;">Undo: reactivate previous question</button>
-                <button class="tool-btn" id="simulateBtn">Simulate 100 votes</button>
-                <button class="tool-btn danger-btn" id="resetPresenceBtn">Reset presence count</button>
+                <button class="tool-btn" id="reactivateBtn">Reactivate previous question (undo)</button>
+                <button class="tool-btn" id="resetPresenceBtn">Reset presence counter</button>
                 <div style="background: #e0e0e0; padding: 12px; border-radius: 8px; display: flex; flex-direction: column; gap: 8px; box-shadow: none;">
                     <label for="bubbleSizeSlider" style="font-size: 0.9rem; font-weight: bold; color: #333; display: flex; justify-content: space-between;">
                         Bubble Size Multiplier <span><span id="bubbleSizeLabel">1.0</span>x</span>
                     </label>
                     <input type="range" id="bubbleSizeSlider" min="0.3" max="3.0" step="0.1" value="1.0" style="width: 100%;">
                 </div>
+                <button class="tool-btn" id="simulateBtn">Simulate 100 votes</button>
                 <button class="tool-btn" id="logoutBtn" style="background: #555; color: white;">Log out</button>
             </div>
         </details>
