@@ -13,7 +13,7 @@
     <link rel="manifest" href="/schoen-poll/site.webmanifest">
 
     <style>
-        body { font-family: system-ui, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; text-align: center; }
+        body { font-family: system-ui, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; text-align: center; background: white; transition: background-color 0.2s ease-in-out; }
         
         /* Semantic Status Message Styling */
         #statusMessage { 
@@ -56,7 +56,7 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, onSnapshot, setDoc, getDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        import { firebaseConfig } from "./config.js";
+        import { firebaseConfig, colors } from "./config.js";
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -68,6 +68,8 @@
         let currentUser = null;
         let activeQuestionId = null;
         let currentSelection = null;
+        let currentOptions = [];
+        let colorClickersEnabled = false;
 
         const maxClicksPerQuestion = 6; // Feeling facetious?
         let clicksRemaining = maxClicksPerQuestion;
@@ -93,6 +95,21 @@
                     statusMessage.innerHTML = "";
                 }, 3000);
             }
+        }
+
+        function updateClickerBackground(forceWhite = false) {
+            if (forceWhite || !colorClickersEnabled || !currentSelection) {
+                document.body.style.backgroundColor = "white";
+                return;
+            }
+
+            const selectedIndex = currentOptions.indexOf(currentSelection);
+            if (selectedIndex === -1) {
+                document.body.style.backgroundColor = "white";
+                return;
+            }
+
+            document.body.style.backgroundColor = colors[selectedIndex % colors.length];
         }
 
         // 1. Make sure the user is logged in somehow
@@ -146,6 +163,8 @@
         // 3. Update UI based on what the Admin is doing
         function handleStateChange(data) {
             let isNewQuestionLoad = false;
+            currentOptions = Array.isArray(data.options) ? data.options : [];
+            colorClickersEnabled = data.colorClickers === true;
             
             // Check if the question ID from Firebase is different from our local memory
             if (data.active_question_id !== activeQuestionId) {
@@ -170,6 +189,7 @@
             // If the poll is completely finished, clear the options and show waiting text
             if (data.status === "complete") {
                 showStatus("Waiting for the next question to launch...", "info");
+                updateClickerBackground(true);
                 return; // Stop executing, which leaves the optionsContainer empty
             }
 
@@ -180,7 +200,7 @@
                 showStatus("This question is closed.", "info");
             }
 
-            data.options.forEach(optionText => {
+            currentOptions.forEach(optionText => {
                 const btn = document.createElement('button');
                 btn.className = 'option-btn';
                 btn.innerText = optionText;
@@ -194,6 +214,8 @@
                 if (currentSelection === optionText) btn.classList.add('selected');
                 optionsContainer.appendChild(btn);
             });
+
+            updateClickerBackground();
 
             if (isNewQuestionLoad) {
                 restorePreviousAnswer(activeQuestionId);
@@ -230,6 +252,7 @@
                 clicksRemaining--;
                 localStorage.setItem('active_poll_clicks', clicksRemaining);
 
+                updateClickerBackground();
                 updateStatusUI();
 
             } catch (error) {
@@ -274,6 +297,8 @@
                         }
                     });
                 }
+
+                updateClickerBackground();
             } catch (error) {
                 console.error("Error fetching previous answer:", error);
             }

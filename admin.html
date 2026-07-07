@@ -114,6 +114,20 @@
         .admin-tools { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
         .tool-btn { padding: 12px; font-size: 0.9rem; background: #e0e0e0; color: #333; box-shadow: none; }
         .danger-btn { background: #ffcdd2; color: #c62828; }
+        .tool-toggle {
+            background: #e0e0e0;
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .tool-toggle span {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #333;
+        }
         
         #loginSection { text-align: center; margin-top: auto; margin-bottom: auto; }
         #loginBtn { background: #4285F4; color: white; padding: 15px; font-size: 1.2rem; }
@@ -172,6 +186,13 @@
                 <span id="userEmailDisplay" style="font-size: 0.8rem; text-align: center; color: #666;"></span>
                 <button class="tool-btn" id="reactivateBtn">Reactivate previous question (undo)</button>
                 <button class="tool-btn" id="resetPresenceBtn">Reset presence counter</button>
+                <div class="tool-toggle">
+                    <span>Color clickers</span>
+                    <label class="switch">
+                        <input type="checkbox" id="colorClickersCheckbox">
+                        <span class="slider"></span>
+                    </label>
+                </div>
                 <div style="background: #e0e0e0; padding: 12px; border-radius: 8px; display: flex; flex-direction: column; gap: 8px; box-shadow: none;">
                     <label for="bubbleSizeSlider" style="font-size: 0.9rem; font-weight: bold; color: #333; display: flex; justify-content: space-between;">
                         Bubble Size Multiplier <span><span id="bubbleSizeLabel">1.0</span>x</span>
@@ -207,6 +228,7 @@
         const qrToggleLabel = document.getElementById('qrToggleLabel');
         const reactivateBtn = document.getElementById('reactivateBtn');
         const simulateBtn = document.getElementById('simulateBtn');
+        const colorClickersCheckbox = document.getElementById('colorClickersCheckbox');
         const statusText = document.getElementById('statusText');
         const bubbleSizeSlider = document.getElementById('bubbleSizeSlider');
         const bubbleSizeLabel = document.getElementById('bubbleSizeLabel');
@@ -343,6 +365,7 @@
             unsubscribeLiveState = onSnapshot(doc(db, "state", "live"), (docSnap) => {
                 if (docSnap.exists()) {
                     currentLiveState = docSnap.data();
+                    colorClickersCheckbox.checked = currentLiveState.colorClickers === true;
                     handleModeSwitch();
                 }
             });
@@ -454,7 +477,7 @@
                     active_question_id: questionRef.id,
                     status: "open",
                     options: optionsArray
-                });
+                }, { merge: true });
 
                 // Reset the display state for the new question, preserving other states (QR)
                 await setDoc(doc(db, "state", "display"), {
@@ -559,6 +582,12 @@
         qrToggleCheckbox.addEventListener('change', async (e) => {
             await setDoc(doc(db, "state", "display"), { 
                 showQR: e.target.checked 
+            }, { merge: true });
+        });
+
+        colorClickersCheckbox.addEventListener('change', async (e) => {
+            await setDoc(doc(db, "state", "live"), { 
+                colorClickers: e.target.checked 
             }, { merge: true });
         });
 

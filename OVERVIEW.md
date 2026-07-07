@@ -25,6 +25,7 @@ Schoen Poll is a static, Firebase-backed live polling system for lectures or pre
   - `active_question_id`: id of the current question document.
   - `status`: usually `open`, `closed`, or `complete`.
   - `options`: array of answer labels for the current question.
+  - `colorClickers`: optional admin-controlled boolean. When true, participant clickers color their page background according to the selected answer.
 - `state/display`
   - `reveal`: whether the results overlay is visible.
   - `showQR`: whether the QR code is visible.
@@ -56,5 +57,5 @@ Schoen Poll is a static, Firebase-backed live polling system for lectures or pre
 - This is designed to be hosted as static files, for example through GitHub Pages.
 - Firebase Authentication must allow Google sign-in for admins and anonymous sign-in for participants.
 - Firestore rules are central to the design: public read access is only for `state/live`, participants can only read/write their own answer documents, and admin-only pages rely on admin access to protected documents.
-- The same `colors` palette from `config.js` is used by the results bubbles, the admin chart, and history bars.
+- The same `colors` palette from `config.js` is used by the results bubbles, the admin chart, history bars, and optional colored clicker backgrounds.
 - `results.html` is intentionally usable as an overlay source, including in OBS or embedded in presentation tooling.
