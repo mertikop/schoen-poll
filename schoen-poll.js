@@ -79,7 +79,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Show/hide the QR code
                 if (data.showQR) {
                     // Generate the QR code URL using the API
-                    qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(clickerUrl)}`;
+                    qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(clickerUrl)}`;
                     qrUrl.innerHTML = clickerUrl;
                     qrContainer.classList.remove('hidden');
                 } else {
