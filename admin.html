@@ -609,31 +609,34 @@
 
         // --- CORE ACTIONS ---
 
-        async function launchQuestion(optionsArray) {
-            if (!optionsArray || optionsArray.length === 0) return;
-            try {
-                const questionRef = await addDoc(collection(db, "questions"), {
-                    timestamp: serverTimestamp(),
-                    options: optionsArray
-                });
-                
-                // Write to live state
-                await setDoc(doc(db, "state", "live"), {
-                    active_question_id: questionRef.id,
-                    status: "open",
-                    options: optionsArray
-                }, { merge: true });
+        async function launchQuestion(optionsArray, questionText = "") {
+  if (!optionsArray || optionsArray.length === 0) return;
 
-                // Reset the display state for the new question, preserving other states (QR)
-                await setDoc(doc(db, "state", "display"), {
-                    reveal: false
-                }, { merge: true });
+  try {
+    const cleanQuestionText = questionText.trim();
 
-            } catch (error) {
-                console.error("Error launching:", error);
-                statusText.innerText = "Launch failed.";
-            }
-        }
+    const questionRef = await addDoc(collection(db, "questions"), {
+      timestamp: serverTimestamp(),
+      questionText: cleanQuestionText,
+      options: optionsArray
+    });
+
+    await setDoc(doc(db, "state", "live"), {
+      active_question_id: questionRef.id,
+      status: "open",
+      questionText: cleanQuestionText.trim(),
+      options: optionsArray
+    }, { merge: true });
+
+    await setDoc(doc(db, "state", "display"), {
+      reveal: false
+    }, { merge: true });
+
+  } catch (error) {
+    console.error("Error launching:", error);
+    statusText.innerText = "Launch failed.";
+  }
+}
 
         // Mode 1: Launch Buttons
 
@@ -643,9 +646,16 @@
             btn.className = 'launch-btn';
             btn.textContent = optionsArray.join(' / ');
             btn.addEventListener('click', () => {
-                launchQuestion(optionsArray);
-            });            
-            if (beforeCustom) {
+                const questionText = prompt(
+                    "Enter the question participants should answer:",
+                    ""
+                 );
+
+                 if (questionText !== null) {
+                    launchQuestion(optionsArray, questionText);
+                 }
+             });
+             if (beforeCustom) {
                 customBtn.parentNode.insertBefore(btn, customBtn);
             } else {
                 customBtn.parentNode.appendChild(btn);
@@ -754,22 +764,36 @@
             }, { merge: true });
         });
 
-        document.getElementById('resetPresenceBtn').addEventListener('click', async () => {
-            statusText.innerText = "Resetting...";
-            try {
-                seenUserIds.clear();
-                // Re-add only the users who voted on the current active question to avoid UI weirdness
-                if (currentLiveState.active_question_id) {
-                    const ansSnap = await getDocs(collection(db, "questions", currentLiveState.active_question_id, "answers"));
-                    ansSnap.forEach(d => seenUserIds.add(d.id));
-                }
-                updateCountsUI();
-                statusText.innerText = "Presence reset.";
-                setTimeout(() => statusText.innerText = "", 3000);
-            } catch (error) {
-                statusText.innerText = "Error resetting.";
-            }
-        });
+document.getElementById('customLaunchBtn').addEventListener('click', () => {
+  const questionText = prompt(
+    "Enter the question participants should answer:",
+    ""
+  );
+
+  if (questionText === null) return;
+
+  const userInput = prompt(
+    "Enter answer options, separated by commas:\n" +
+    "(e.g. Apple, Banana, Cherry)",
+    ""
+  );
+
+  if (userInput === null) return;
+
+  const options = [
+    ...new Set(
+      userInput
+        .split(',')
+        .map(option => option.trim())
+        .filter(option => option.length > 0)
+    )
+  ];
+
+  if (options.length > 0) {
+    addLaunchButton(options, false);
+    launchQuestion(options, questionText);
+  }
+});
 
         simulateBtn.addEventListener('click', () => {
             if (!currentLiveState.active_question_id) return alert("Launch a question first!");

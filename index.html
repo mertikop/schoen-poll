@@ -43,11 +43,24 @@
         button.option-btn.selected { background: #4285F4; color: white; }
         button.option-btn:disabled { border-color: #ccc; color: #999; cursor: not-allowed; background: #f9f9f9; }
         button.option-btn.selected:disabled { background: #a0c1ff; border-color: #a0c1ff; color: white; }
+        .question-text {
+            max-width: 700px;
+            margin: 0 auto 24px;
+            padding: 0 16px;
+            text-align: center;
+            font-size: clamp(1.5rem, 6vw, 2.4rem);
+            line-height: 1.2;
+            color: #1a365d;
+            }
+        .question-text:empty {
+                display: none;
+            }
     </style>
 </head>
 <body>
 
     <h2>Schoen Poll</h2>
+    <h1 id="questionText" class="question-text"></h1>
     <div id="optionsContainer" class="options-container"></div>
     <div id="statusMessage" class="status-info">Connecting...</div>
 
@@ -164,6 +177,11 @@
         function handleStateChange(data) {
             let isNewQuestionLoad = false;
             currentOptions = Array.isArray(data.options) ? data.options : [];
+            const questionTextElement = document.getElementById('questionText');
+            questionTextElement.textContent =
+            typeof data.questionText === "string"
+            ? data.questionText
+            : "";
             colorClickersEnabled = data.colorClickers === true;
             
             // Check if the question ID from Firebase is different from our local memory
