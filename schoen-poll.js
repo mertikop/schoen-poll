@@ -52,6 +52,15 @@ document.addEventListener("DOMContentLoaded", () => {
         unsubscribeLiveState = onSnapshot(doc(db, "state", "live"), (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
+                const questionTextElement =
+                document.getElementById("spQuestionText");
+                
+                if (questionTextElement) {
+                    questionTextElement.textContent =
+                    typeof data.questionText === "string"
+                    ? data.questionText
+                    : "";
+                }
 
                 // If the question ID changed, reset the swarm
                 if (data.active_question_id && data.active_question_id !== currentQuestionId) {
